@@ -1,0 +1,15 @@
+// src/components/BootstrapClient.tsx
+'use client';
+
+import { useEffect } from 'react';
+
+export default function BootstrapClient() {
+  useEffect(() => {
+    // Import Bootstrap JavaScript
+    import('bootstrap/dist/js/bootstrap.bundle.min.js').catch(() => {
+      // Ignore import errors
+    });
+  }, []);
+
+  return null;
+}

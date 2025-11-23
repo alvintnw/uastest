@@ -1,0 +1,6 @@
+{
+    "require": {
+        "jenssegers/mongodb": "^5.5",
+        "laravel/ui": "^4.6"
+    }
+}

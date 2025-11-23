@@ -1,0 +1,12 @@
+{
+  "name": "uas-frontendprogramming",
+  "version": "1.0.0",
+  "description": "Monorepo for UMKM Frontend and Backend",
+  "scripts": {
+    "start": "concurrently \"cd umkm-frontend && npm run dev\" \"cd umkm-backend && php artisan serve\"",
+    "install-all": "npm install && cd umkm-frontend && npm install && cd ../umkm-backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
