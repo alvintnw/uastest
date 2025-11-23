@@ -1,14 +1,10 @@
-# Use official PHP image
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install required packages
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    git zip unzip libssl-dev pkg-config \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -16,20 +12,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy app files
+# Copy project files
 COPY . .
 
-# Install dependencies
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate Laravel key
+# Generate app key
 RUN php artisan key:generate
 
 # Create storage symlink
 RUN php artisan storage:link || true
 
-# Expose port
-EXPOSE 10000
+EXPOSE 8080
 
-# Start Laravel on Render port
-CMD php artisan serve --host 0.0.0.0 --port 10000
+# Start Laravel
+CMD php artisan serve --host 0.0.0.0 --port 8080
