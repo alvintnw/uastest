@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -29,9 +28,10 @@ interface Product {
   description: string;
   price: number;
   category: string;
-  created_at: string;
-  updated_at: string;
-  image_url: string;
+  // Buat optional agar lebih aman jika backend tidak mengirimnya
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string; 
 }
 
 export default function Home() {
@@ -84,14 +84,9 @@ export default function Home() {
     }
   };
 
-  const featuredFoods = products.slice(0, 14).map(product => ({
-    id: product.id,
-    name: product.name,
-    price: `Rp ${product.price.toLocaleString('id-ID')}`,
-    image_url: product.image_url || '/images/placeholder-food.jpg',
-    description: product.description,
-    category: product.category
-  }));
+  // ✅ PERBAIKAN 1: Jangan mengubah struktur object di sini. Cukup slice saja.
+  // Ini menjaga agar object tetap sesuai dengan Interface Product
+  const featuredFoods = products.slice(0, 14);
 
   const handleWhatsAppOrder = (productName: string) => {
     const message = `Halo, saya ingin memesan ${productName}. Bisa info lebih lanjut?`;
@@ -145,6 +140,11 @@ export default function Home() {
   const closeModal = () => {
     setShowOrderModal(false);
     setSelectedFood(null);
+  };
+
+  // Helper untuk format harga (Rupiah)
+  const formatRupiah = (price: number) => {
+    return `Rp ${price.toLocaleString('id-ID')}`;
   };
 
   return (
@@ -306,7 +306,8 @@ export default function Home() {
                           }}
                         >
                           <Image
-                            src={food.image_url}
+                            // ✅ PERBAIKAN 2: Fallback Image langsung di JSX
+                            src={food.image_url || '/images/placeholder-food.jpg'}
                             alt={food.name}
                             fill
                             style={{ objectFit: "cover" }}
@@ -329,7 +330,8 @@ export default function Home() {
                           <h5 className="card-title fw-bold text-dark mb-2">{food.name}</h5>
                           <p className="card-text text-muted flex-grow-1 small">{food.description}</p>
                           <div className="d-flex justify-content-between align-items-center mt-3">
-                            <span className="h4 mb-0 text-primary fw-bold">{food.price}</span>
+                            {/* ✅ PERBAIKAN 3: Format Harga di JSX */}
+                            <span className="h4 mb-0 text-primary fw-bold">{formatRupiah(food.price)}</span>
                             <div className="d-flex gap-2">
                               <button
                                 className="btn btn-outline-primary btn-sm px-3"
@@ -376,7 +378,7 @@ export default function Home() {
             <div className="col-md-4">
               <div className="feature-card text-center h-100 hover-scale animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <div className="feature-icon bg-white text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-4 shadow-lg pulse-glow"
-                     style={{ width: '120px', height: '120px' }}>
+                      style={{ width: '120px', height: '120px' }}>
                   <span className="fs-1">💳</span>
                 </div>
                 <h5 className="fw-bold text-white mb-3">Pembayaran Mudah</h5>
@@ -386,7 +388,7 @@ export default function Home() {
             <div className="col-md-4">
               <div className="feature-card text-center h-100 hover-scale animate-fade-in" style={{ animationDelay: '0.3s' }}>
                 <div className="feature-icon bg-white text-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-4 shadow-lg pulse-glow"
-                     style={{ width: '120px', height: '120px' }}>
+                      style={{ width: '120px', height: '120px' }}>
                   <span className="fs-1">⭐</span>
                 </div>
                 <h5 className="fw-bold text-white mb-3">Terpercaya</h5>
@@ -396,7 +398,7 @@ export default function Home() {
             <div className="col-md-4">
               <div className="feature-card text-center h-100 hover-scale animate-fade-in" style={{ animationDelay: '0.5s' }}>
                 <div className="feature-icon bg-white text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-4 shadow-lg pulse-glow"
-                     style={{ width: '120px', height: '120px' }}>
+                      style={{ width: '120px', height: '120px' }}>
                   <span className="fs-1">🏆</span>
                 </div>
                 <h5 className="fw-bold text-white mb-3">Kualitas Terbaik</h5>
@@ -547,7 +549,8 @@ export default function Home() {
               <div className="modal-body">
                 <div className="mb-3">
                   <Image
-                    src={selectedFood.image_url}
+                    // ✅ PERBAIKAN 4: Fallback Image di Modal
+                    src={selectedFood.image_url || '/images/placeholder-food.jpg'}
                     alt={selectedFood.name}
                     width={200}
                     height={150}
@@ -556,7 +559,8 @@ export default function Home() {
                   />
                 </div>
                 <p className="text-muted">{selectedFood.description}</p>
-                <p className="h5 text-primary fw-bold">{selectedFood.price}</p>
+                {/* ✅ PERBAIKAN 5: Format Harga di Modal */}
+                <p className="h5 text-primary fw-bold">{formatRupiah(selectedFood.price)}</p>
 
                 {orderSuccess && (
                   <div className="alert alert-success">{orderSuccess}</div>
@@ -599,7 +603,7 @@ export default function Home() {
                       value={orderForm.quantity}
                       onChange={(e) => setOrderForm({...orderForm, quantity: e.target.value})}
                       required
-                    />
+                    />a
                   </div>
                   <div className="d-flex gap-2">
                     <button type="submit" className="btn btn-primary" disabled={orderLoading}>
