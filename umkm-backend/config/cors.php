@@ -22,7 +22,7 @@ return [
     // BAGIAN INI YANG PENTING DIUBAH
     'allowed_origins' => [
     'http://localhost:3000', // Untuk development
-    'https://uastest-gziof4iwr-alvintnws-projects.vercel.app/', // Domain Vercel Anda
+    'https://uastest-z4b6.vercel.app', // Domain Vercel Anda
     ],
 
     'allowed_origins_patterns' => [],
