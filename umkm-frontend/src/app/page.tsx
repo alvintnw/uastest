@@ -601,9 +601,12 @@ export default function Home() {
                       id="quantity"
                       min="1"
                       value={orderForm.quantity}
-                      onChange={(e) => setOrderForm({...orderForm, quantity: e.target.value})}
+                      onChange={(e) => setOrderForm({
+                        ...orderForm, 
+                        quantity: parseInt(e.target.value) || 1 
+                      })}
                       required
-                    />a
+                    />
                   </div>
                   <div className="d-flex gap-2">
                     <button type="submit" className="btn btn-primary" disabled={orderLoading}>
