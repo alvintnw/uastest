@@ -32,7 +32,6 @@ Route::get('/', function () {
 // ------------------------------------------------------------------------
 
 // ✅ FOOD (READ: Index dan Show) - Ini harus tetap public agar frontend bisa tampil
-// Foods API Routes (index/show tersedia publik; create/update/delete tersedia di /api/admin/foods)
 Route::get('/foods', [FoodController::class, 'index']);
 Route::get('/foods/{id}', [FoodController::class, 'show']);
 
@@ -45,47 +44,47 @@ Route::post('/register', [AuthController::class, 'register']);
 // Customer Order (Public)
 Route::post('/orders', [InvoiceController::class, 'customerOrder']);
 
-// Test MongoDB connection and environment
+// ------------------------------------------------------------------------
+// ✅ FIX: Test MongoDB connection (DIPERBAIKI)
+// ------------------------------------------------------------------------
 Route::get('/test-db', function() {
     try {
-        // Check MongoDB PHP extension
+        // 1. Cek Extension PHP
         if (!extension_loaded('mongodb')) {
-            return [
-                'status' => 'MongoDB PHP extension not installed',
-                'php_version' => PHP_VERSION,
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'MongoDB PHP extension not installed',
                 'extensions' => get_loaded_extensions()
-            ];
+            ], 500);
         }
 
-        // Check connection
+        // 2. Cek Koneksi (Ping Database)
         $connection = DB::connection('mongodb');
         $connection->command(['ping' => 1]);
 
-        // Get database name
-        $config = config('database.connections.mongodb');
+        // 3. Ambil nama database (Aman untuk Atlas)
+        $dbName = $connection->getDatabaseName();
 
-        return [
+        return response()->json([
             'status' => 'Connected to MongoDB successfully',
-            'database_name' => $config['database'],
-            'host' => $config['host'],
-            'port' => $config['port']
-        ];
+            'database_name' => $dbName,
+            'message' => 'Connection established using MongoDB Atlas DSN.'
+        ]);
+
     } catch (\Exception $e) {
-        return [
+        return response()->json([
             'status' => 'Failed to connect to MongoDB',
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
-        ];
+        ], 500);
     }
 });
+
 Route::post('/login', [AuthController::class, 'login']);
 
 // ------------------------------------------------------------------------
 // ## Rute Terproteksi (Authenticated)
 // ------------------------------------------------------------------------
-// Admin product routes are protected. We allow either a real authenticated
-// admin user (Sanctum) or a demo token (Bearer demo-token-*) via the
-// EnsureAdminOrDemo middleware implemented in app/Http/Middleware.
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
@@ -94,57 +93,47 @@ Route::middleware(['auth:sanctum'])->group(function () {
         return $request->user();
     });
 
-    // Dashboard Stats moved to admin group below
-
-    // Invoices moved to admin group below
 });
 
 // ------------------------------------------------------------------------
-// Rute Admin/Manajer (CRUD: CREATE, UPDATE, DELETE)
-// Melakukan proteksi dengan EnsureAdminOrDemo middleware (mendukung demo token)
-// Ini diletakkan di luar auth:sanctum group agar demo-token tidak ditangani oleh Sanctum
-// yang pada setup ini tidak menggunakan relational personal access tokens.
+// Rute Admin/Manajer (CRUD)
+// ------------------------------------------------------------------------
 Route::middleware([\App\Http\Middleware\EnsureAdminOrDemo::class])->prefix('admin')->group(function () {
 
-    // CRUD FOOD (POST, PUT, DELETE) - Menggunakan FoodController untuk admin
+    // CRUD FOOD
     Route::get('foods', [FoodController::class, 'adminIndex']);
     Route::post('foods', [FoodController::class, 'store']);
     Route::put('foods/{id}', [FoodController::class, 'update']);
     Route::delete('foods/{id}', [FoodController::class, 'destroy']);
 
-    // CRUD Products (POST, PUT, DELETE) - Tetap ada untuk backward compatibility
+    // CRUD Products
     Route::resource('products', ProductController::class)->except(['create', 'edit']);
 
-    // Invoices (Ganti dengan Resource yang lebih bersih)
-    // Mencakup GET, POST, PUT, DELETE
+    // Invoices
     Route::resource('invoices', InvoiceController::class)->except(['create', 'edit']);
 
-    // Update invoice status (endpoint khusus untuk update status)
+    // Update invoice status
     Route::put('invoices/{invoice}/status', [InvoiceStatusController::class, 'updateStatus']);
 
-    // Dashboard Stats - Real data from models
+    // Dashboard Stats
     Route::get('/dashboard/stats', function () {
         try {
-            // Get total sales from Sale model (more accurate)
+            // Get total sales from Sale model
             $saleRecord = \App\Models\Sale::first();
             $totalSales = $saleRecord ? $saleRecord->total_sales : 0;
 
-            // Get total orders (count of all invoices)
+            // Get total orders
             $totalOrders = \App\Models\Invoice::count();
 
-            // Get total products (count of active foods)
+            // Get total products
             $totalProducts = \App\Models\Food::where('is_active', true)->count();
 
-            // Get pending orders count
+            // Get status counts
             $pendingOrders = \App\Models\Invoice::where('status', 'Menunggu')->count();
-
-            // Get processing orders count
             $processingOrders = \App\Models\Invoice::where('status', 'Diproses')->count();
-
-            // Get completed orders count
             $completedOrders = \App\Models\Invoice::where('status', 'Selesai')->count();
 
-            // Get recent orders (last 5 invoices)
+            // Get recent orders
             $recentOrders = \App\Models\Invoice::orderBy('created_at', 'desc')
                 ->take(5)
                 ->get()
@@ -156,11 +145,11 @@ Route::middleware([\App\Http\Middleware\EnsureAdminOrDemo::class])->prefix('admi
                         'total' => $invoice->total_amount,
                         'status' => $invoice->status,
                         'created_at' => $invoice->created_at,
-                        'items_count' => 1 // Simplified for now
+                        'items_count' => 1
                     ];
                 });
 
-            // Get popular products (top 3 by sales from invoice items)
+            // Get popular products
             $popularProducts = \App\Models\InvoiceItem::select('food_name', 'quantity', 'subtotal')
                 ->get()
                 ->groupBy('food_name')
@@ -194,6 +183,4 @@ Route::middleware([\App\Http\Middleware\EnsureAdminOrDemo::class])->prefix('admi
             ], 500);
         }
     });
-
-
 });

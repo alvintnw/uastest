@@ -23,12 +23,8 @@ return [
         // MongoDB Atlas (utama)
         'mongodb' => [
             'driver' => 'mongodb',
-            'dsn' => env('DB_DSN'),     // menggunakan DB_DSN dari .env
-            'database' => env('DB_DATABASE'),
-            'options' => [
-                'retryWrites' => true,
-                'appname' => 'Laravel',
-            ],
+            'dsn' => env('DB_DSN', env('MONGODB_URI')), // <-- Ini triknya!
+            'database' => env('DB_DATABASE', 'umkm_backend'),
         ],
 
         // MongoDB lokal (opsional untuk development)
